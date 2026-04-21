@@ -22,3 +22,8 @@ export const HF_AUTHOR = SWM_ORG;
 export const DEPENDENTS_REPO = { owner: SWM_ORG, repo: 'react-native-executorch' };
 
 export const DEPENDENTS_MAX_PAGES = 5;
+
+export const REPO_URL =
+  process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY
+    ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`
+    : 'https://github.com/msluszniak/swm-product-stats';

@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -8,16 +8,20 @@ import {
   GITHUB_REPOS,
   HF_AUTHOR,
   NPM_PACKAGES,
+  REPO_URL,
   SWM_ORGS,
 } from './config.ts';
 import { fetchStars } from './sources/github.ts';
 import { fetchNpmWeeklyDownloads } from './sources/npm.ts';
 import { fetchHFModels, summarizeHF } from './sources/huggingface.ts';
 import { fetchDependents, topNonSWM } from './sources/dependents.ts';
+import { generateCharts } from './charts.ts';
 import { postSlack } from './slack.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataDir = join(__dirname, '..', 'data');
+const rootDir = join(__dirname, '..');
+const dataDir = join(rootDir, 'data');
+const chartsDir = join(rootDir, 'charts');
 const historyPath = join(dataDir, 'history.csv');
 const privateMindPath = join(dataDir, 'private-mind.json');
 
@@ -100,10 +104,18 @@ function csvValues(row: Row): string[] {
 function appendHistory(row: Row): void {
   const header = csvHeader(row);
   const values = csvValues(row);
+  const newLine = values.join(',');
+
   if (!existsSync(historyPath)) {
-    writeFileSync(historyPath, header.join(',') + '\n');
+    writeFileSync(historyPath, header.join(',') + '\n' + newLine + '\n');
+    return;
   }
-  appendFileSync(historyPath, values.join(',') + '\n');
+
+  const lines = readFileSync(historyPath, 'utf8').trim().split('\n');
+  const lastLine = lines[lines.length - 1] ?? '';
+  const lastDate = lastLine.split(',')[0];
+  const nextLines = lastDate === row.date ? [...lines.slice(0, -1), newLine] : [...lines, newLine];
+  writeFileSync(historyPath, nextLines.join('\n') + '\n');
 }
 
 function readPreviousRow(): Record<string, string> | null {
@@ -129,7 +141,11 @@ function delta(curr: number | null, prev: string | undefined): string {
   return d > 0 ? ` (+${fmt(d)})` : ` (${fmt(d)})`;
 }
 
-function formatSlack(row: Row, prev: Record<string, string> | null): string {
+function formatSlack(
+  row: Row,
+  prev: Record<string, string> | null,
+  chartFiles: string[]
+): string {
   const lines: string[] = [];
   lines.push(`:bar_chart: *SWM Product Stats — ${row.date}*`);
 
@@ -178,6 +194,15 @@ function formatSlack(row: Row, prev: Record<string, string> | null): string {
   lines.push('', `*Private Mind downloads* (manual${stamp})`);
   lines.push(`• ${pm.downloads ?? 'n/a'}${delta(pm.downloads, prev?.['pm_downloads'])}`);
 
+  if (chartFiles.length) {
+    lines.push('', '*Trend charts*');
+    for (const file of chartFiles) {
+      const label = file.replace(/\.png$/, '').replace(/-/g, ' ');
+      const url = `${REPO_URL}/blob/main/charts/${file}`;
+      lines.push(`• <${url}|${label}>`);
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -185,7 +210,9 @@ async function main(): Promise<void> {
   const prev = readPreviousRow();
   const row = await collect();
   appendHistory(row);
-  const message = formatSlack(row, prev);
+  const chartFiles = await generateCharts(historyPath, chartsDir);
+  console.log(`[charts] generated ${chartFiles.length} chart(s)`);
+  const message = formatSlack(row, prev, chartFiles);
   console.log(message);
 
   const webhook = process.env.SLACK_WEBHOOK_URL;

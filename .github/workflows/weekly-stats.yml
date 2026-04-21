@@ -26,13 +26,14 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: npm run collect
 
-      - name: Commit history
+      - name: Commit history and charts
         run: |
           git config user.name 'swm-stats-bot'
           git config user.email 'stats-bot@users.noreply.github.com'
           git add data/history.csv
+          [ -d charts ] && git add charts/
           if git diff --cached --quiet; then
-            echo "No history changes to commit"
+            echo "Nothing to commit"
           else
             git commit -m "stats: weekly update $(date -u +%Y-%m-%d)"
             git push
