@@ -10,8 +10,9 @@ a row to `data/history.csv` for trend tracking.
 - **HuggingFace** — all models under the `software-mansion` author
 - **Dependents** — `network/dependents` scrape of `react-native-executorch`,
   total count plus top 5 non-SWM consumers by stars (sampled)
-- **Private Mind downloads** — manual entry in `data/private-mind.json`
-  (stars are auto-fetched as part of GitHub stars)
+- **Private Mind app metrics** — manual entry in `data/private-mind.json`:
+  per-platform (iOS / Android) downloads, number of opinions, average rating.
+  Stars are auto-fetched as part of GitHub stars.
 
 ## Configuration
 
@@ -34,9 +35,12 @@ Before the Monday run, update `data/private-mind.json`:
 ```json
 {
   "updated_at": "2026-04-20",
-  "downloads": 1234
+  "ios":     { "downloads": 1234, "opinions": 45, "rating": 4.7 },
+  "android": { "downloads": 5678, "opinions": 123, "rating": 4.5 }
 }
 ```
+
+Leave any field as `null` if unknown — charts will skip null data points.
 
 Commit and push — the next scheduled run will pick it up.
 

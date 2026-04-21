@@ -25,10 +25,19 @@ const chartsDir = join(rootDir, 'charts');
 const historyPath = join(dataDir, 'history.csv');
 const privateMindPath = join(dataDir, 'private-mind.json');
 
+type PlatformStats = {
+  downloads: number | null;
+  opinions: number | null;
+  rating: number | null;
+};
+
 type PrivateMind = {
   updated_at: string | null;
-  downloads: number | null;
+  ios: PlatformStats;
+  android: PlatformStats;
 };
+
+const EMPTY_PLATFORM: PlatformStats = { downloads: null, opinions: null, rating: null };
 
 type Row = {
   date: string;
@@ -59,7 +68,7 @@ async function collect(): Promise<Row> {
 
   const privateMind: PrivateMind = existsSync(privateMindPath)
     ? (JSON.parse(readFileSync(privateMindPath, 'utf8')) as PrivateMind)
-    : { updated_at: null, downloads: null };
+    : { updated_at: null, ios: { ...EMPTY_PLATFORM }, android: { ...EMPTY_PLATFORM } };
 
   return {
     date,
@@ -81,7 +90,12 @@ function csvHeader(row: Row): string[] {
     'hf_total_alltime',
     'hf_model_count',
     'rne_dependents_total',
-    'pm_downloads',
+    'pm_ios_downloads',
+    'pm_android_downloads',
+    'pm_ios_opinions',
+    'pm_android_opinions',
+    'pm_ios_rating',
+    'pm_android_rating',
     'pm_updated_at',
   ];
 }
@@ -96,7 +110,12 @@ function csvValues(row: Row): string[] {
     String(row.hf.totalAllTime),
     String(row.hf.count),
     String(row.rneDependentsTotal),
-    blank(row.privateMind.downloads),
+    blank(row.privateMind.ios.downloads),
+    blank(row.privateMind.android.downloads),
+    blank(row.privateMind.ios.opinions),
+    blank(row.privateMind.android.opinions),
+    blank(row.privateMind.ios.rating),
+    blank(row.privateMind.android.rating),
     row.privateMind.updated_at ?? '',
   ];
 }
@@ -191,8 +210,21 @@ function formatSlack(
 
   const pm = row.privateMind;
   const stamp = pm.updated_at ? `, updated ${pm.updated_at}` : '';
-  lines.push('', `*Private Mind downloads* (manual${stamp})`);
-  lines.push(`• ${pm.downloads ?? 'n/a'}${delta(pm.downloads, prev?.['pm_downloads'])}`);
+  const pmVal = (n: number | null) => (n == null ? 'n/a' : fmt(n));
+  const pmRating = (n: number | null) => (n == null ? 'n/a' : n.toFixed(2));
+  lines.push('', `*Private Mind* (manual${stamp})`);
+  lines.push(
+    `• Downloads — iOS: ${pmVal(pm.ios.downloads)}${delta(pm.ios.downloads, prev?.['pm_ios_downloads'])}, ` +
+      `Android: ${pmVal(pm.android.downloads)}${delta(pm.android.downloads, prev?.['pm_android_downloads'])}`
+  );
+  lines.push(
+    `• Opinions — iOS: ${pmVal(pm.ios.opinions)}${delta(pm.ios.opinions, prev?.['pm_ios_opinions'])}, ` +
+      `Android: ${pmVal(pm.android.opinions)}${delta(pm.android.opinions, prev?.['pm_android_opinions'])}`
+  );
+  lines.push(
+    `• Rating — iOS: ${pmRating(pm.ios.rating)}${delta(pm.ios.rating, prev?.['pm_ios_rating'])}, ` +
+      `Android: ${pmRating(pm.android.rating)}${delta(pm.android.rating, prev?.['pm_android_rating'])}`
+  );
 
   if (chartFiles.length) {
     lines.push('', '*Trend charts*');

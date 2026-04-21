@@ -33,11 +33,14 @@ function toNum(s: string | undefined): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
+type YRange = { min?: number; max?: number; beginAtZero?: boolean };
+
 async function renderLineChart(
   title: string,
   labels: string[],
   datasets: { label: string; data: (number | null)[] }[],
-  outPath: string
+  outPath: string,
+  yRange?: YRange
 ): Promise<void> {
   const config: ChartConfiguration<'line', (number | null)[], string> = {
     type: 'line',
@@ -61,7 +64,11 @@ async function renderLineChart(
         legend: { position: 'top' },
       },
       scales: {
-        y: { beginAtZero: true },
+        y: {
+          beginAtZero: yRange?.beginAtZero ?? yRange?.min === undefined,
+          min: yRange?.min,
+          max: yRange?.max,
+        },
       },
     },
   };
@@ -81,6 +88,18 @@ export async function generateCharts(
   const firstRow = rows[0];
   const generated: string[] = [];
 
+  const renderIfData = async (
+    datasets: { label: string; data: (number | null)[] }[],
+    title: string,
+    fileName: string,
+    yRange?: YRange
+  ) => {
+    if (datasets.length === 0) return;
+    if (datasets.every((ds) => ds.data.every((v) => v == null))) return;
+    await renderLineChart(title, labels, datasets, join(chartsDir, fileName), yRange);
+    generated.push(fileName);
+  };
+
   const seriesGroup = async (
     prefix: string,
     title: string,
@@ -88,13 +107,11 @@ export async function generateCharts(
     labelTransform: (col: string) => string = (c) => c.replace(prefix, '')
   ) => {
     const cols = Object.keys(firstRow).filter((k) => k.startsWith(prefix));
-    if (cols.length === 0) return;
     const datasets = cols.map((col) => ({
       label: labelTransform(col),
       data: rows.map((r) => toNum(r[col])),
     }));
-    await renderLineChart(title, labels, datasets, join(chartsDir, fileName));
-    generated.push(fileName);
+    await renderIfData(datasets, title, fileName);
   };
 
   const singleSeries = async (
@@ -104,10 +121,25 @@ export async function generateCharts(
     fileName: string
   ) => {
     if (!(col in firstRow)) return;
-    const data = rows.map((r) => toNum(r[col]));
-    if (data.every((v) => v == null)) return;
-    await renderLineChart(title, labels, [{ label, data }], join(chartsDir, fileName));
-    generated.push(fileName);
+    await renderIfData(
+      [{ label, data: rows.map((r) => toNum(r[col])) }],
+      title,
+      fileName
+    );
+  };
+
+  const platformSeries = async (
+    iosCol: string,
+    androidCol: string,
+    title: string,
+    fileName: string,
+    yRange?: YRange
+  ) => {
+    const datasets = [
+      { label: 'iOS', data: rows.map((r) => toNum(r[iosCol])) },
+      { label: 'Android', data: rows.map((r) => toNum(r[androidCol])) },
+    ];
+    await renderIfData(datasets, title, fileName, yRange);
   };
 
   await seriesGroup('gh_stars:', 'GitHub stars', 'gh-stars.png');
@@ -124,11 +156,24 @@ export async function generateCharts(
     'dependents',
     'rne-dependents.png'
   );
-  await singleSeries(
-    'pm_downloads',
+  await platformSeries(
+    'pm_ios_downloads',
+    'pm_android_downloads',
     'Private Mind — downloads (manual)',
-    'Private Mind downloads',
     'pm-downloads.png'
+  );
+  await platformSeries(
+    'pm_ios_opinions',
+    'pm_android_opinions',
+    'Private Mind — number of opinions (manual)',
+    'pm-opinions.png'
+  );
+  await platformSeries(
+    'pm_ios_rating',
+    'pm_android_rating',
+    'Private Mind — average rating (manual)',
+    'pm-ratings.png',
+    { min: 0, max: 5 }
   );
 
   return generated;

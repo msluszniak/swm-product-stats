@@ -1,4 +1,13 @@
 {
   "updated_at": null,
-  "downloads": null
+  "ios": {
+    "downloads": null,
+    "opinions": null,
+    "rating": null
+  },
+  "android": {
+    "downloads": null,
+    "opinions": null,
+    "rating": null
+  }
 }
