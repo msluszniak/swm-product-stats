@@ -1,13 +1,13 @@
 {
-  "updated_at": "2026-05-18",
+  "updated_at": "2026-06-08",
   "ios": {
-    "downloads": 4204,
+    "downloads": 4265,
     "opinions": 20,
     "rating": 3.9
   },
   "android": {
-    "downloads": 4384,
-    "opinions": 26,
-    "rating": 3.885
+    "downloads": 5646,
+    "opinions": 28,
+    "rating": 3.929
   }
 }
