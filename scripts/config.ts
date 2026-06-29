@@ -23,6 +23,15 @@ export const DEPENDENTS_REPO = { owner: SWM_ORG, repo: 'react-native-executorch'
 
 export const DEPENDENTS_MAX_PAGES = 5;
 
+// How many top non-SWM dependents to track week-over-week (snapshot kept in
+// data/dependents.json); the Slack message highlights the top 5.
+export const DEPENDENTS_TOP_N = 10;
+export const DEPENDENTS_SHOW_N = 5;
+
+// Full-history charts: npm daily downloads (registry range API) and cumulative
+// GitHub star history both start here, matching the npm-stat.com chart range.
+export const HISTORY_FROM = '2024-08-29';
+
 export const REPO_URL =
   process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY
     ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`

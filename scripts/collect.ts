@@ -5,17 +5,26 @@ import { fileURLToPath } from 'node:url';
 import {
   DEPENDENTS_MAX_PAGES,
   DEPENDENTS_REPO,
+  DEPENDENTS_SHOW_N,
+  DEPENDENTS_TOP_N,
   GITHUB_REPOS,
   HF_AUTHOR,
+  HISTORY_FROM,
   NPM_PACKAGES,
   REPO_URL,
   SWM_ORGS,
 } from './config.ts';
-import { fetchStars } from './sources/github.ts';
-import { fetchNpmWeeklyDownloads } from './sources/npm.ts';
+import { fetchStarHistory, fetchStars } from './sources/github.ts';
+import { fetchNpmDailyRange, fetchNpmWeeklyDownloads } from './sources/npm.ts';
 import { fetchHFModels, summarizeHF } from './sources/huggingface.ts';
-import { fetchDependents, topNonSWM } from './sources/dependents.ts';
-import { generateCharts } from './charts.ts';
+import {
+  type Dependent,
+  type DependentsDiff,
+  diffDependents,
+  fetchDependents,
+  topNonSWM,
+} from './sources/dependents.ts';
+import { generateCharts, generateLiveCharts } from './charts.ts';
 import { postSlack } from './slack.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +33,7 @@ const dataDir = join(rootDir, 'data');
 const chartsDir = join(rootDir, 'charts');
 const historyPath = join(dataDir, 'history.csv');
 const privateMindPath = join(dataDir, 'private-mind.json');
+const dependentsPath = join(dataDir, 'dependents.json');
 
 type PlatformStats = {
   downloads: number | null;
@@ -39,13 +49,15 @@ type PrivateMind = {
 
 const EMPTY_PLATFORM: PlatformStats = { downloads: null, opinions: null, rating: null };
 
+type DependentsSnapshot = { date: string; top: Dependent[] };
+
 type Row = {
   date: string;
   ghStars: Record<string, number | null>;
   npmWeekly: Record<string, number | null>;
   hf: ReturnType<typeof summarizeHF>;
   rneDependentsTotal: number;
-  rneTopNonSwm: { owner: string; repo: string; stars: number }[];
+  rneTop: Dependent[];
   privateMind: PrivateMind;
 };
 
@@ -76,9 +88,43 @@ async function collect(): Promise<Row> {
     npmWeekly: Object.fromEntries(npmEntries),
     hf: summarizeHF(hfModels),
     rneDependentsTotal: dep.total,
-    rneTopNonSwm: topNonSWM(dep.sampled, SWM_ORGS, 5),
+    rneTop: topNonSWM(dep.sampled, SWM_ORGS, DEPENDENTS_TOP_N),
     privateMind,
   };
+}
+
+function readDependentsSnapshot(): DependentsSnapshot | null {
+  if (!existsSync(dependentsPath)) return null;
+  try {
+    return JSON.parse(readFileSync(dependentsPath, 'utf8')) as DependentsSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+function writeDependentsSnapshot(snapshot: DependentsSnapshot): void {
+  writeFileSync(dependentsPath, JSON.stringify(snapshot, null, 2) + '\n');
+}
+
+// Fetch the full-history series used only for the live charts (npm daily
+// downloads + cumulative star events). Kept separate from the CSV row because
+// it is heavier and not persisted.
+async function fetchTimeseries(date: string, githubToken: string | undefined) {
+  const [npmSeries, starSeries] = await Promise.all([
+    Promise.all(
+      NPM_PACKAGES.map(async (pkg) => ({
+        label: pkg,
+        points: await fetchNpmDailyRange(pkg, HISTORY_FROM, date),
+      }))
+    ),
+    Promise.all(
+      GITHUB_REPOS.map(async (r) => ({
+        label: `${r.owner}/${r.repo}`,
+        events: await fetchStarHistory(r.owner, r.repo, githubToken),
+      }))
+    ),
+  ]);
+  return { npmSeries, starSeries };
 }
 
 function csvHeader(row: Row): string[] {
@@ -150,6 +196,12 @@ function fmt(n: number): string {
   return n.toLocaleString('en-US');
 }
 
+function pctSuffix(d: number, base: number): string {
+  if (base === 0) return '';
+  const p = (d / base) * 100;
+  return `, ${p > 0 ? '+' : ''}${p.toFixed(1)}%`;
+}
+
 function delta(curr: number | null, prev: string | undefined): string {
   if (curr == null) return '';
   if (prev == null || prev === '') return '';
@@ -157,12 +209,20 @@ function delta(curr: number | null, prev: string | undefined): string {
   if (Number.isNaN(p)) return '';
   const d = curr - p;
   if (d === 0) return ' (±0)';
-  return d > 0 ? ` (+${fmt(d)})` : ` (${fmt(d)})`;
+  return ` (${d > 0 ? '+' : ''}${fmt(d)}${pctSuffix(d, p)})`;
+}
+
+// Inline delta for already-known numeric pairs (e.g. dependent star movement).
+function deltaNum(d: number | null, base: number): string {
+  if (d == null) return '';
+  if (d === 0) return ' (±0)';
+  return ` (${d > 0 ? '+' : ''}${fmt(d)}${pctSuffix(d, base - d)})`;
 }
 
 function formatSlack(
   row: Row,
   prev: Record<string, string> | null,
+  depDiff: DependentsDiff,
   chartFiles: string[]
 ): string {
   const lines: string[] = [];
@@ -201,11 +261,18 @@ function formatSlack(
       prev?.['rne_dependents_total']
     )}`
   );
-  if (row.rneTopNonSwm.length) {
-    lines.push('Top 5 non-SWM (by stars, sampled):');
-    row.rneTopNonSwm.forEach((d, i) =>
-      lines.push(`    ${i + 1}. \`${d.owner}/${d.repo}\` — ${fmt(d.stars)} ⭐`)
-    );
+  const link = (d: { owner: string; repo: string }) =>
+    `<https://github.com/${d.owner}/${d.repo}|${d.owner}/${d.repo}>`;
+  const shown = depDiff.ranked.slice(0, DEPENDENTS_SHOW_N);
+  if (shown.length) {
+    lines.push(`Top ${shown.length} non-SWM (by stars, sampled):`);
+    shown.forEach((d, i) => {
+      const change = d.isNew ? ' :new:' : deltaNum(d.starsDelta, d.stars);
+      lines.push(`    ${i + 1}. ${link(d)} — ${fmt(d.stars)} ⭐${change}`);
+    });
+  }
+  if (depDiff.dropped.length) {
+    lines.push(`Dropped from top tracked: ${depDiff.dropped.map(link).join(', ')}`);
   }
 
   const pm = row.privateMind;
@@ -239,12 +306,28 @@ function formatSlack(
 }
 
 async function main(): Promise<void> {
+  const githubToken = process.env.GITHUB_TOKEN;
   const prev = readPreviousRow();
+  const prevDeps = readDependentsSnapshot();
   const row = await collect();
   appendHistory(row);
-  const chartFiles = await generateCharts(historyPath, chartsDir);
+
+  const depDiff = diffDependents(row.rneTop, prevDeps?.top ?? []);
+  writeDependentsSnapshot({ date: row.date, top: row.rneTop });
+
+  const { npmSeries, starSeries } = await fetchTimeseries(row.date, githubToken);
+  const liveCharts = await generateLiveCharts(
+    npmSeries,
+    starSeries,
+    HISTORY_FROM,
+    row.date,
+    chartsDir
+  );
+  const csvCharts = await generateCharts(historyPath, chartsDir);
+  const chartFiles = [...liveCharts, ...csvCharts];
   console.log(`[charts] generated ${chartFiles.length} chart(s)`);
-  const message = formatSlack(row, prev, chartFiles);
+
+  const message = formatSlack(row, prev, depDiff, chartFiles);
   console.log(message);
 
   const webhook = process.env.SLACK_WEBHOOK_URL;

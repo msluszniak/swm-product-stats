@@ -5,11 +5,17 @@ a row to `data/history.csv` for trend tracking.
 
 ## Sources
 
-- **GitHub stars** — `react-native-executorch`, `react-native-rag`, `private-mind`
-- **npm weekly downloads** — core packages and RNE fetcher packages
+- **GitHub stars** — `react-native-executorch`, `react-native-rag`, `private-mind`.
+  Current count plus a cumulative star-history chart (stargazers API).
+- **npm weekly downloads** — core packages and RNE fetcher packages. Plus a
+  full-history weekly-downloads chart pulled from the npm registry range API
+  (same data as npm-stat.com), starting `HISTORY_FROM` in `config.ts`.
 - **HuggingFace** — all models under the `software-mansion` author
 - **Dependents** — `network/dependents` scrape of `react-native-executorch`,
-  total count plus top 5 non-SWM consumers by stars (sampled)
+  total count plus the top 5 non-SWM consumers by stars (sampled), each linked,
+  with week-over-week star deltas and new/dropped entries tracked via
+  `data/dependents.json`
+- All week-over-week deltas show both the absolute change and a percentage.
 - **Private Mind app metrics** — manual entry in `data/private-mind.json`:
   per-platform (iOS / Android) downloads, number of opinions, average rating.
   Stars are auto-fetched as part of GitHub stars.

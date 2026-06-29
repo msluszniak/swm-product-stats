@@ -63,3 +63,37 @@ export function topNonSWM(sampled: Dependent[], swmOrgs: string[], n: number): D
     .sort((a, b) => b.stars - a.stars)
     .slice(0, n);
 }
+
+export const depKey = (d: { owner: string; repo: string }) => `${d.owner}/${d.repo}`;
+
+export type DependentChange = Dependent & {
+  starsDelta: number | null; // null = newly entered the tracked set
+  isNew: boolean;
+};
+
+export type DependentsDiff = {
+  ranked: DependentChange[]; // current top, with per-repo star deltas
+  dropped: Dependent[]; // were tracked last time, gone from the current set
+};
+
+// Compare the current top dependents against the previous snapshot to surface
+// star movement, new entrants, and repos that fell out of the tracked set.
+export function diffDependents(
+  current: Dependent[],
+  previous: Dependent[]
+): DependentsDiff {
+  const prevByKey = new Map(previous.map((d) => [depKey(d), d]));
+  const currKeys = new Set(current.map(depKey));
+
+  const ranked: DependentChange[] = current.map((d) => {
+    const prev = prevByKey.get(depKey(d));
+    return {
+      ...d,
+      starsDelta: prev ? d.stars - prev.stars : null,
+      isNew: !prev,
+    };
+  });
+
+  const dropped = previous.filter((d) => !currKeys.has(depKey(d)));
+  return { ranked, dropped };
+}
