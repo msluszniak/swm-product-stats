@@ -1,19 +1,19 @@
 {
-  "date": "2026-07-12",
+  "date": "2026-07-19",
   "top": [
     {
       "owner": "off-grid-ai",
-      "repo": "off-grid-ai-mobile",
-      "stars": 2728
-    },
-    {
-      "owner": "moeen-mahmud",
-      "repo": "remen",
-      "stars": 5
+      "repo": "OGAM",
+      "stars": 2772
     },
     {
       "owner": "budgie-at",
       "repo": "budgie",
+      "stars": 6
+    },
+    {
+      "owner": "moeen-mahmud",
+      "repo": "remen",
       "stars": 5
     },
     {
@@ -28,7 +28,7 @@
     },
     {
       "owner": "DiegoCM1",
-      "repo": "BluEye",
+      "repo": "Bluai",
       "stars": 2
     },
     {
