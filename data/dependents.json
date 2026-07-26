@@ -1,19 +1,19 @@
 {
-  "date": "2026-07-19",
+  "date": "2026-07-26",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 2772
-    },
-    {
-      "owner": "budgie-at",
-      "repo": "budgie",
-      "stars": 6
+      "stars": 2807
     },
     {
       "owner": "moeen-mahmud",
       "repo": "remen",
+      "stars": 5
+    },
+    {
+      "owner": "budgie-at",
+      "repo": "budgie",
       "stars": 5
     },
     {
