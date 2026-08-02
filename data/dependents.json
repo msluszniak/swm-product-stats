@@ -1,19 +1,14 @@
 {
-  "date": "2026-07-26",
+  "date": "2026-08-02",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 2807
+      "stars": 2857
     },
     {
       "owner": "moeen-mahmud",
       "repo": "remen",
-      "stars": 5
-    },
-    {
-      "owner": "budgie-at",
-      "repo": "budgie",
       "stars": 5
     },
     {
@@ -49,6 +44,11 @@
     {
       "owner": "mohammadhelaly",
       "repo": "helprr",
+      "stars": 1
+    },
+    {
+      "owner": "raulshma",
+      "repo": "aquaqt",
       "stars": 1
     }
   ]
