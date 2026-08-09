@@ -1,15 +1,20 @@
 {
-  "date": "2026-08-02",
+  "date": "2026-08-09",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 2857
+      "stars": 2889
     },
     {
       "owner": "moeen-mahmud",
       "repo": "remen",
       "stars": 5
+    },
+    {
+      "owner": "roboflow",
+      "repo": "supervision-js",
+      "stars": 3
     },
     {
       "owner": "Gaonuk",
@@ -42,13 +47,8 @@
       "stars": 2
     },
     {
-      "owner": "mohammadhelaly",
-      "repo": "helprr",
-      "stars": 1
-    },
-    {
-      "owner": "raulshma",
-      "repo": "aquaqt",
+      "owner": "jongan69",
+      "repo": "pocketsage",
       "stars": 1
     }
   ]
