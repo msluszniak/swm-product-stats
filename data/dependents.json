@@ -1,10 +1,15 @@
 {
-  "date": "2026-09-06",
+  "date": "2026-09-13",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 3055
+      "stars": 3086
+    },
+    {
+      "owner": "loomax-labs",
+      "repo": "InferrLM",
+      "stars": 109
     },
     {
       "owner": "roboflow",
@@ -27,6 +32,16 @@
       "stars": 3
     },
     {
+      "owner": "RCCIIT-BCA-SIH2026",
+      "repo": "Railio",
+      "stars": 2
+    },
+    {
+      "owner": "mohammadhelaly",
+      "repo": "helprr",
+      "stars": 2
+    },
+    {
       "owner": "DiegoCM1",
       "repo": "Bluai",
       "stars": 2
@@ -35,21 +50,6 @@
       "owner": "wadecalvin9",
       "repo": "Imagine",
       "stars": 2
-    },
-    {
-      "owner": "jamiul-islam",
-      "repo": "panic-proof",
-      "stars": 2
-    },
-    {
-      "owner": "Pldkoit0493",
-      "repo": "Foodify",
-      "stars": 2
-    },
-    {
-      "owner": "mohammadhelaly",
-      "repo": "helprr",
-      "stars": 1
     }
   ]
 }
