@@ -1,15 +1,15 @@
 {
-  "date": "2026-09-13",
+  "date": "2026-09-20",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 3086
+      "stars": 3129
     },
     {
       "owner": "loomax-labs",
       "repo": "InferrLM",
-      "stars": 109
+      "stars": 112
     },
     {
       "owner": "roboflow",
@@ -22,6 +22,11 @@
       "stars": 5
     },
     {
+      "owner": "msluszniak",
+      "repo": "fastsam-camera",
+      "stars": 3
+    },
+    {
       "owner": "Gaonuk",
       "repo": "nopti",
       "stars": 3
@@ -30,11 +35,6 @@
       "owner": "FouadMagdy01",
       "repo": "promptly",
       "stars": 3
-    },
-    {
-      "owner": "RCCIIT-BCA-SIH2026",
-      "repo": "Railio",
-      "stars": 2
     },
     {
       "owner": "mohammadhelaly",
