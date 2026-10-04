@@ -1,10 +1,10 @@
 {
-  "date": "2026-09-27",
+  "date": "2026-10-04",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 3170
+      "stars": 3206
     },
     {
       "owner": "loomax-labs",
@@ -37,6 +37,11 @@
       "stars": 3
     },
     {
+      "owner": "RCCIIT-BCA-SIH2026",
+      "repo": "Railio",
+      "stars": 2
+    },
+    {
       "owner": "mohammadhelaly",
       "repo": "helprr",
       "stars": 2
@@ -44,11 +49,6 @@
     {
       "owner": "wadecalvin9",
       "repo": "Imagine",
-      "stars": 2
-    },
-    {
-      "owner": "jamiul-islam",
-      "repo": "panic-proof",
       "stars": 2
     }
   ]
