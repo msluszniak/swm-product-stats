@@ -1,20 +1,20 @@
 {
-  "date": "2026-10-25",
+  "date": "2026-11-01",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 3271
+      "stars": 3315
     },
     {
       "owner": "loomax-labs",
       "repo": "InferrLM",
-      "stars": 112
+      "stars": 113
     },
     {
       "owner": "roboflow",
       "repo": "supervision-js",
-      "stars": 15
+      "stars": 16
     },
     {
       "owner": "msluszniak",
