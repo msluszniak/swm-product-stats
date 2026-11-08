@@ -1,30 +1,25 @@
 {
-  "date": "2026-11-01",
+  "date": "2026-11-08",
   "top": [
     {
       "owner": "off-grid-ai",
       "repo": "OGAM",
-      "stars": 3315
+      "stars": 3349
     },
     {
       "owner": "loomax-labs",
       "repo": "InferrLM",
-      "stars": 113
+      "stars": 114
     },
     {
       "owner": "roboflow",
       "repo": "supervision-js",
-      "stars": 16
+      "stars": 17
     },
     {
       "owner": "msluszniak",
       "repo": "fastsam-camera",
       "stars": 7
-    },
-    {
-      "owner": "moeen-mahmud",
-      "repo": "remen",
-      "stars": 5
     },
     {
       "owner": "Gaonuk",
@@ -49,6 +44,11 @@
     {
       "owner": "wadecalvin9",
       "repo": "Imagine",
+      "stars": 2
+    },
+    {
+      "owner": "jamiul-islam",
+      "repo": "panic-proof",
       "stars": 2
     }
   ]
